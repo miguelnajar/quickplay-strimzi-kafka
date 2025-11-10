@@ -1,0 +1,110 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: controller
+  labels:
+    strimzi.io/cluster: Cluster_Name
+spec:
+  replicas: Kafka_Replicas
+  roles:
+    - controller
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 500Gi
+        kraftMetadata: shared
+        deleteClaim: false
+  template:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: Nodepool_Key
+                  operator: In
+                  values:
+                  - Nodepool_Value
+---
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: broker
+  labels:
+    strimzi.io/cluster: Cluster_Name
+spec:
+  replicas: Kafka_Replicas
+  roles:
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 500Gi
+        kraftMetadata: shared
+        deleteClaim: false
+  template:
+    pod:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: Nodepool_Key
+                  operator: In
+                  values:
+                  - Nodepool_Value
+---
+
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: Cluster_Name
+spec:
+  kafka:
+    version: 4.1.0
+    metadataVersion: 4.1-IV1
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    config:
+      offsets.topic.replication.factor: Kafka_Replicas
+      transaction.state.log.replication.factor: Kafka_Replicas
+      transaction.state.log.min.isr: Kafka_Insync_Replicas
+      default.replication.factor: Kafka_Replicas
+      min.insync.replicas: Kafka_Insync_Replicas
+      producer.max.request.size: 20971520
+      consumer.max.request.size: 20971520
+      producer.message.max.bytes: 20971520
+      consumer.message.max.bytes: 20971520
+      socket.request.max.bytes: 209715200
+      socket.send.buffer.bytes: 20971520
+      socket.receive.buffer.bytes: 20971520
+      message.max.bytes: 20971520
+      max.partition.fetch.bytes: 20971520
+      producer.max.request.size: 20971520
+      consumer.max.request.size: 20971520
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+    template:
+      pod:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                  - key: Nodepool_Key
+                    operator: In
+                    values:
+                    - Nodepool_Value
